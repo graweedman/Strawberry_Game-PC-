@@ -1,16 +1,19 @@
 #pragma once
 
-#include "GameState.h"
+
+#include "MainMenuState.h"
 /* Class that acts as game engine */
 
 class Game
 {
 private:
 	//Variables
+
 	//Window
 	sf::RenderWindow* window; //Window class
-	
 	sf::Event ev; //Event
+	std::vector<sf::VideoMode> videoModes;
+	sf::ContextSettings windowSettings;
 
 	sf::Clock dtClock;
 	float dt; //Delta time

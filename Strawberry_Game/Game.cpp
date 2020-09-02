@@ -1,48 +1,76 @@
 #include "Game.h"
 //Constructors / Destructors
 
-//Private functions
+//Init functions
 void Game::initVariables()
 {
 	this->window = nullptr;
+	this->dt = 0.f;
 }
 void Game::initWindow()
 {
 	std::ifstream ifs("Config/window.ini");
+	this->videoModes = sf::VideoMode::getFullscreenModes();
 
 	std::string title = "None";
-	sf::VideoMode window_bounds(800, 600);
+	sf::VideoMode window_bounds = sf::VideoMode::getDesktopMode();
+	bool fullscreen = false;
 	unsigned framerate_limit = 120;
 	bool vertical_sync_enable = false;
+	unsigned antialiasing_level = 0;
 
 	if (ifs.is_open())
 	{
 		std::getline(ifs, title);
 		ifs >> window_bounds.width >> window_bounds.height;
+		ifs >> fullscreen;
 		ifs >> framerate_limit;
 		ifs >> vertical_sync_enable;
+		ifs >> antialiasing_level;
 	}
 	ifs.close();
-
-	this->window = new sf::RenderWindow(window_bounds, title, sf::Style::Titlebar | sf::Style::Close);
+	
+	windowSettings.antialiasingLevel = antialiasing_level;
+	if (fullscreen)
+		this->window = new sf::RenderWindow(window_bounds, title, sf::Style::Fullscreen, windowSettings);
+	else
+		this->window = new sf::RenderWindow(window_bounds, title, sf::Style::Titlebar | sf::Style::Close, windowSettings);
+	
 	this->window->setFramerateLimit(framerate_limit);
 	this->window->setVerticalSyncEnabled(vertical_sync_enable);
 }
-
 void Game::initKeys()
 {
-	this->supportedKeys.emplace("Escape", sf::Keyboard::Key::Escape);
-	this->supportedKeys.emplace("A", sf::Keyboard::Key::A);
-	this->supportedKeys.emplace("D", sf::Keyboard::Key::D);
-	this->supportedKeys.emplace("W", sf::Keyboard::Key::W);
-	this->supportedKeys.emplace("S", sf::Keyboard::Key::S);
+	std::ifstream ifs("Config/Supported_keys.ini");
 
-	std::cout << this->supportedKeys.at("A") << "\n";
+	if (ifs.is_open())
+	{
+		std::string key = "";
+		int key_value = 0;
+
+		while (ifs >> key >> key_value)
+		{
+			this->supportedKeys[key] = key_value;
+		}
+	}
+	ifs.close();
+
+	this->supportedKeys["Escape"] = sf::Keyboard::Key::Escape;
+	this->supportedKeys["A"] = sf::Keyboard::Key::A;
+	this->supportedKeys["D"] = sf::Keyboard::Key::D;
+	this->supportedKeys["W"] = sf::Keyboard::Key::W;
+	this->supportedKeys["S"] = sf::Keyboard::Key::S; 
+//Debug REMOVE LATER
+	for (auto i : this->supportedKeys)
+	{
+		std::cout << i.first << " " << i.second << "\n";
+
+	}
 }
-
 void Game::initStates()
 {
-	this->states.push(new GameState(this->window, &this->supportedKeys));
+	this->states.push(new MainMenuState(this->window, &this->supportedKeys, &this->states));
+	//this->states.push(new GameState(this->window, &this->supportedKeys));
 }
 
 //Constructors / Destructors
